@@ -15,7 +15,7 @@ class DetailTransaksi extends Model
       'id_detail_transaksi',
       'id_transaksi',
       'id_paket',
-      'berat',
+      'berat', 
 
   ];
   public $timestamps = false;

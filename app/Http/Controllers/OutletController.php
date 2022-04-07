@@ -17,7 +17,7 @@ class OutletController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => 'false',
-                'message' => $validator->errors(),
+                'message' => $validator->errors()
             ]);
         }
 
@@ -29,11 +29,12 @@ class OutletController extends Controller
         $data = Outlet::where('id_outlet', '=', $outlet->id_outlet)->first();
 
         return response()->json([
-            'success' => 'true',
+            'success' => true,
             'message' => 'Data Outlet Berhasil Ditambahkan',
-            'data' => $data,
+            'data' => $data
         ]);
     }
+
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -53,10 +54,10 @@ class OutletController extends Controller
 
         return response()->json([
             'success' => 'true',
-            'message' => 'Data Outlet Berhasil Disunting',
-            'data' => $data,
+            'message' => 'Data Outlet Berhasil Disunting'
         ]);
     }
+
     public function delete($id)
     {
         $delete = Outlet::where('id_outlet', $id)->delete();
@@ -68,19 +69,20 @@ class OutletController extends Controller
             ]);
         } else {
             return response()->json([
-                'success' => false,
+                'success' => true,
                 'message' => 'Data Outlet Gagal Dihapus'
             ]);
         }
     }
+
     public function getAll($limit = NULL, $offset = NULL)
     {
-        $data["count"] = Outlet::count();
+        $data['count'] = Outlet::count();
 
         if ($limit == NULL && $offset == NULL) {
-            $data["outlet"] = Outlet::get();
+            $data['outlet'] = Outlet::get();
         } else {
-            $data["outlet"] = Outlet::take($limit)->skip($offset)->get();
+            $data['outlet'] = Outlet::take($limit)->skip($offset)->get();
         }
 
         return response()->json([
@@ -88,9 +90,10 @@ class OutletController extends Controller
             'data' => $data
         ]);
     }
+
     public function getById($id)
     {
-        $data["outlet"] = Outlet::where('id_outlet', $id)->get();
+        $data['outlet'] = Outlet::where('id_outlet', $id)->get();
 
         return response()->json([
             'success' => true,

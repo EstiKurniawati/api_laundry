@@ -9,6 +9,7 @@ use App\Models\Transaksi;
 use App\Models\DetailTransaksi;
 use Illuminate\Support\Facades;
 use DB;
+use Tymon\JWTAuth\Facades\JWTAuth;
 //--
 
 class TransaksiController extends Controller
@@ -120,21 +121,18 @@ class TransaksiController extends Controller
 
     public function report(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'tahun' => 'required|numeric',
-        ]);
-
-        if($validator->fails()){
-            return $this->errorResponse($validator->errors());
-        }
+        $user = JWTAuth::parseToken()->authenticate();
 
         $query = DB::table('transaksi')
                     ->select('transaksi.id_transaksi', 'transaksi.tanggal', 'transaksi.status', 'transaksi.dibayar', 'transaksi.tanggal_bayar', 'users.nama as nama_user', 'member.nama as nama_member')
                     ->join('users', 'users.id', '=', 'transaksi.id_user')
-                    ->join('outlet', 'outlet.id_outlet', '=', 'outlet.id_outlet')
+                    ->join('outlet', 'outlet.id_outlet', '=', 'users.id_outlet')
                     ->join('member', 'member.id_member', '=', 'transaksi.id_member')
-                    ->whereYear('transaksi.tanggal', '=', $request->tahun);
+                    ->where('users.id_outlet','=',$user['id_outlet']);
 
+        if($request->tahun != ""){
+            $query->WhereYear('transaksi.tanggal', '=', $request->tahun);
+        }
         if($request->bulan != NULL){
             $query->WhereMonth('transaksi.tanggal', '=', $request->bulan);
         }
@@ -145,15 +143,16 @@ class TransaksiController extends Controller
         if(count($query->get()) > 0){
             $data['status'] = true;
             $i = 0;
+
             foreach($query->get() as $list){
                 //get tolal transaksi
-                $get_total_transaksi = DB::table('detail_transaksi')
+                $get_detail_transaksi = DB::table('detail_transaksi')
                                         ->select('detail_transaksi.id_detail_transaksi', 'detail_transaksi.id_paket', 'paket.jenis', 'detail_transaksi.berat' ,DB::raw('paket.harga*detail_transaksi.berat as sub_total'))
                                         ->join('paket', 'paket.id_paket', "=", "detail_transaksi.id_paket")
                                         ->where('detail_transaksi.id_transaksi', '=', $list->id_transaksi)
                                         ->get();
                 $total = 0;
-                foreach($get_total_transaksi as $sub_total){
+                foreach($get_detail_transaksi as $sub_total){
                     $total +=$sub_total->sub_total;
                 }
 
@@ -165,7 +164,7 @@ class TransaksiController extends Controller
                 $data['data'][$i]['kasir'] = $list->nama_user;
                 $data['data'][$i]['nama_member'] = $list->nama_member;
                 $data['data'][$i]['total'] = $total;
-                $data['data'][$i]['detail_transaksi'] = $get_total_transaksi;
+                $data['data'][$i]['detail_transaksi'] = $get_detail_transaksi;
 
                 $i++;
             }
